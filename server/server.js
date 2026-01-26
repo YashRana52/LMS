@@ -7,17 +7,17 @@ import cookieParser from "cookie-parser";
 import userRouter from "./routes/user.js";
 import courseRouter from "./routes/course.js";
 import mediaRouter from "./routes/media.js";
-import purchaseRouter from "./routes/purchase.js";
+import purchaseRouter, { stripeWebhook } from "./routes/purchase.js";
 
 const app = express();
 await connectDB();
 const port = 3000;
 
-// ⚡ Stripe webhook must use raw body before any other middleware
+// ⚡ Stripe webhook must be before express.json() & cors
 app.post(
   "/api/stripe/webhook",
   express.raw({ type: "application/json" }),
-  purchaseRouter,
+  stripeWebhook,
 );
 
 // ⚡ Global middlewares
