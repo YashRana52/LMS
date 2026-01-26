@@ -165,34 +165,44 @@ export const editProfile = async (req, res) => {
     if (!user) {
       return res.status(404).json({
         success: false,
-        message: "Profile not find ",
+        message: "Profile not found",
       });
     }
-    // extract public id of the old image from the url if it exist
-    if (user.photoUrl) {
-      const publicId = user.photoUrl.split("/").pop().split(".")[0]; // extract public id
-      deleteMediaFromCloudinary(publicId);
+
+    // 🖼️ if new photo uploaded
+    if (profilePhoto) {
+      // delete old image
+      if (user.photoPublicId) {
+        await deleteMediaFromCloudinary(user.photoPublicId);
+      }
+
+      // upload new image
+      const uploadResult = await uploadMedia(
+        profilePhoto.buffer,
+        "users/profile",
+      );
+
+      user.photoUrl = uploadResult.secure_url;
+      user.photoPublicId = uploadResult.public_id;
     }
-    //upload new photo
-    const cloudResponse = await uploadMedia(profilePhoto.path);
-    const photoUrl = cloudResponse.secure_url;
 
-    const updatedData = { name, photoUrl };
+    // ✏️ update name if provided
+    if (name) {
+      user.name = name;
+    }
 
-    const updatedUser = await User.findByIdAndUpdate(userId, updatedData, {
-      new: true,
-    }).select("-password");
+    await user.save();
 
     return res.status(200).json({
       success: true,
-      user: updatedUser,
+      user,
       message: "Profile updated successfully",
     });
   } catch (error) {
-    console.log(error);
+    console.error("editProfile error:", error);
     return res.status(500).json({
       success: false,
-      message: "failed to update profile",
+      message: "Failed to update profile",
     });
   }
 };

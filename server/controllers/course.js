@@ -2,6 +2,7 @@ import { Course } from "../models/course.js";
 import { Lecture } from "../models/lecture.js";
 import {
   deleteMediaFromCloudinary,
+  deleteVideoFromCloudinary,
   uploadMedia,
 } from "../utills/cloudinary.js";
 
@@ -75,41 +76,44 @@ export const editCourse = async (req, res) => {
       courseLevel,
       coursePrice,
     } = req.body;
+
     const thumbnail = req.file;
     const courseId = req.params.courseId;
 
-    let course = Course.findById(courseId);
+    let course = await Course.findById(courseId);
     if (!course) {
       return res.status(404).json({
         success: false,
         message: "Course not found",
       });
     }
-    let courseThumbnail;
+
+    // 🔄 thumbnail update
     if (thumbnail) {
-      if (course.thumbnail) {
-        const publicId = course.courseThumbnail.split("/").pop().split(".")[0];
-        await deleteMediaFromCloudinary(publicId); //delete old image
+      // delete old image
+      if (course.thumbnailPublicId) {
+        await deleteMediaFromCloudinary(course.thumbnailPublicId);
       }
-      //upload new image to cloudinary
-      courseThumbnail = await uploadMedia(thumbnail.path);
+
+      // upload new image
+      const uploadResult = await uploadMedia(
+        thumbnail.buffer,
+        "courses/thumbnails",
+      );
+
+      course.courseThumbnail = uploadResult.secure_url;
+      course.thumbnailPublicId = uploadResult.public_id;
     }
 
-    const updateData = {
-      courseTitle,
-      description,
-      subTitle,
-      category,
-      courseLevel,
-      coursePrice,
-      courseThumbnail: courseThumbnail
-        ? courseThumbnail.secure_url
-        : course.courseThumbnail,
-    };
+    // update other fields
+    course.courseTitle = courseTitle ?? course.courseTitle;
+    course.description = description ?? course.description;
+    course.subTitle = subTitle ?? course.subTitle;
+    course.category = category ?? course.category;
+    course.courseLevel = courseLevel ?? course.courseLevel;
+    course.coursePrice = coursePrice ?? course.coursePrice;
 
-    course = await Course.findByIdAndUpdate(courseId, updateData, {
-      new: true,
-    });
+    await course.save();
 
     return res.status(200).json({
       success: true,
@@ -271,24 +275,29 @@ export const editLecture = async (req, res) => {
 export const removeLecture = async (req, res) => {
   try {
     const { courseId, lectureId } = req.params;
-    const lecture = await Lecture.findByIdAndDelete(lectureId);
+
+    const lecture = await Lecture.findById(lectureId);
     if (!lecture) {
       return res.status(404).json({
         success: false,
         message: "Lecture not found",
       });
     }
-    //delete thelecturefrom the cloudinary
+
+    // 🎥 delete video from cloudinary FIRST
     if (lecture.videoPublicId) {
-      await deleteMediaFromCloudinary(lecture.videoPublicId);
+      await deleteVideoFromCloudinary(lecture.videoPublicId);
     }
 
-    //Remove the lecture refrence from the assosiated course
+    // 🗑️ delete lecture from DB
+    await Lecture.findByIdAndDelete(lectureId);
 
+    // 🔗 remove lecture reference from course
     await Course.updateOne(
-      { lecture: lectureId },
-      { $pull: { lectures: lectureId } }, //remove the lectureId from the lectures array
+      { _id: courseId },
+      { $pull: { lectures: lectureId } },
     );
+
     return res.status(200).json({
       success: true,
       message: "Lecture removed successfully",
