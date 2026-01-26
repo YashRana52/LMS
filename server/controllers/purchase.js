@@ -83,10 +83,9 @@ export const createCheckoutSession = async (req, res) => {
 export const stripeWebhook = async (req, res) => {
   let event;
 
-  // 🔐 STEP 1: Verify real Stripe webhook
+  // Step 1️⃣: Verify webhook signature
   try {
     const sig = req.headers["stripe-signature"];
-
     event = stripe.webhooks.constructEvent(
       req.body,
       sig,
@@ -98,80 +97,58 @@ export const stripeWebhook = async (req, res) => {
   }
 
   try {
-    //  STEP 2: Handle events
     switch (event.type) {
       case "payment_intent.succeeded": {
         const paymentIntent = event.data.object;
 
-        // Checkout session fetch
-        const sessions = await stripe.checkout.sessions.list({
-          payment_intent: paymentIntent.id,
-        });
+        // Get purchaseId from metadata
+        const purchaseId = paymentIntent.metadata.purchaseId;
+        if (!purchaseId) break;
 
-        const session = sessions.data[0];
-        if (!session) break;
+        // Fetch purchase record
+        const purchase =
+          await CoursePurchase.findById(purchaseId).populate("courseId");
+        if (!purchase || purchase.status === "completed") break;
 
-        const purchase = await CoursePurchase.findOne({
-          paymentId: session.id,
-        }).populate("courseId");
-
-        if (!purchase || purchase.status === "completed") {
-          break; // already processed
-        }
-
-        // amount
+        // ✅ Update purchase status
         purchase.amount = paymentIntent.amount_received / 100;
         purchase.status = "completed";
         await purchase.save();
 
-        // 🔓 Unlock lectures
-        if (purchase.courseId?.lectures?.length > 0) {
-          await Lecture.updateMany(
-            { _id: { $in: purchase.courseId.lectures } },
-            { $set: { isPreviewFree: true } },
-          );
-        }
-
-        // 👤 Add course to user
+        // ✅ Add course to user (only the paying user)
         await User.findByIdAndUpdate(purchase.userId, {
           $addToSet: { enrolledCourses: purchase.courseId._id },
         });
 
-        // 🎓 Add student to course
+        // ✅ Add student to course
         await Course.findByIdAndUpdate(purchase.courseId._id, {
           $addToSet: { enrolledStudents: purchase.userId },
         });
 
-        console.log("✅ payment_intent.succeeded processed");
+        console.log(
+          `✅ Payment succeeded and DB updated for purchase: ${purchaseId}`,
+        );
         break;
       }
 
-      /**
-       *  PAYMENT CANCELED
-       */
       case "payment_intent.canceled": {
         const paymentIntent = event.data.object;
+        const purchaseId = paymentIntent.metadata.purchaseId;
+        if (!purchaseId) break;
 
-        const sessions = await stripe.checkout.sessions.list({
-          payment_intent: paymentIntent.id,
+        await CoursePurchase.findByIdAndUpdate(purchaseId, {
+          status: "canceled",
         });
 
-        const session = sessions.data[0];
-        if (!session) break;
-
-        await CoursePurchase.findOneAndUpdate(
-          { paymentId: session.id },
-          { status: "canceled" },
-        );
-
-        console.log("❌ payment_intent.canceled processed");
+        console.log(`❌ Payment canceled for purchase: ${purchaseId}`);
         break;
       }
 
       default:
-        console.log("Unhandled event:", event.type);
+        console.log("Unhandled event type:", event.type);
     }
 
+    // Respond to Stripe
     res.status(200).json({ received: true });
   } catch (error) {
     console.error("Webhook processing error:", error);

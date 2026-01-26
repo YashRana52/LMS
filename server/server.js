@@ -13,8 +13,14 @@ const app = express();
 await connectDB();
 const port = 3000;
 
-app.use("/api/stripe/webhook", express.raw({ type: "application/json" }));
+// ⚡ Stripe webhook must use raw body before any other middleware
+app.post(
+  "/api/stripe/webhook",
+  express.raw({ type: "application/json" }),
+  purchaseRouter,
+);
 
+// ⚡ Global middlewares
 app.use(express.json());
 app.use(
   cors({
@@ -24,14 +30,15 @@ app.use(
 );
 app.use(cookieParser());
 
-app.get("/", (req, res) => {
-  res.send("Server is Live!");
-});
-
+// Routes
 app.use("/api/user", userRouter);
 app.use("/api/course", courseRouter);
 app.use("/api/media", mediaRouter);
 app.use("/api/stripe", purchaseRouter);
+
+app.get("/", (req, res) => {
+  res.send("Server is Live!");
+});
 
 app.listen(port, () => {
   console.log(`Server is running at http://localhost:${port}`);
