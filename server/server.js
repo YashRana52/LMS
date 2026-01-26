@@ -13,10 +13,10 @@ const app = express();
 await connectDB();
 const port = 3000;
 
-// ⚡ Stripe webhook must be before express.json() & cors
+// ⚡ Stripe webhook route — must be BEFORE express.json()
 app.post(
   "/api/stripe/webhook",
-  express.raw({ type: "application/json" }),
+  express.raw({ type: "application/json" }), // raw body for signature verification
   stripeWebhook,
 );
 
@@ -34,7 +34,7 @@ app.use(cookieParser());
 app.use("/api/user", userRouter);
 app.use("/api/course", courseRouter);
 app.use("/api/media", mediaRouter);
-app.use("/api/stripe", purchaseRouter);
+app.use("/api/stripe", purchaseRouter); // only checkout routes
 
 app.get("/", (req, res) => {
   res.send("Server is Live!");

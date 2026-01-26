@@ -14,7 +14,7 @@ purchaseRouter.post(
   createCheckoutSession,
 );
 
-// ⚡ Export webhook separately for app.js
+// ⚡ Export webhook separately for app.js (do NOT attach to router)
 export const stripeWebhook = stripeWebhookController;
 
 export default purchaseRouter;

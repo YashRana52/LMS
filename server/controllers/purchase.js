@@ -16,7 +16,7 @@ export const createCheckoutSession = async (req, res) => {
     const course = await Course.findById(courseId);
     if (!course) return res.status(404).json({ message: "Course not found" });
 
-    // Check for existing pending or completed purchase
+    // Check for existing pending/completed purchase
     let existingPurchase = await CoursePurchase.findOne({
       userId,
       courseId,
@@ -24,18 +24,16 @@ export const createCheckoutSession = async (req, res) => {
     });
 
     if (existingPurchase) {
-      // If pending purchase exists, allow using same session
       if (existingPurchase.status === "pending" && existingPurchase.paymentId) {
-        return res
-          .status(200)
-          .json({
-            url: `https://checkout.stripe.com/pay/${existingPurchase.paymentId}`,
-          });
+        // allow user to pay the same pending session
+        return res.status(200).json({
+          url: `https://checkout.stripe.com/pay/${existingPurchase.paymentId}`,
+        });
       }
       return res.status(400).json({ message: "Course already purchased" });
     }
 
-    // Create new purchase record
+    // Create new purchase
     const newPurchase = await CoursePurchase.create({
       courseId,
       userId,
@@ -51,9 +49,7 @@ export const createCheckoutSession = async (req, res) => {
         {
           price_data: {
             currency: "inr",
-            product_data: {
-              name: course.courseTitle,
-            },
+            product_data: { name: course.courseTitle },
             unit_amount: course.coursePrice * 100,
           },
           quantity: 1,
@@ -87,7 +83,7 @@ export const stripeWebhook = async (req, res) => {
   try {
     const sig = req.headers["stripe-signature"];
     event = stripe.webhooks.constructEvent(
-      req.body,
+      req.body, // raw buffer
       sig,
       process.env.STRIPE_WEBHOOK_SECRET,
     );
@@ -111,7 +107,7 @@ export const stripeWebhook = async (req, res) => {
         purchase.amount = session.amount_total / 100;
         await purchase.save();
 
-        // Enroll user in course
+        // Enroll user
         await User.findByIdAndUpdate(purchase.userId, {
           $addToSet: { enrolledCourses: purchase.courseId },
         });
