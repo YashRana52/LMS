@@ -1,5 +1,6 @@
 import express from "express";
 import protect from "../middlewares/auth.js";
+import { createCheckoutSession } from "../controllers/purchase.js";
 
 const purchaseRouter = express.Router();
 
