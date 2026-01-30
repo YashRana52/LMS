@@ -22,7 +22,7 @@ function Hero() {
 
           <p className="mt-6 text-lg text-gray-200 dark:text-gray-400 max-w-2xl mx-auto">
             Discover industry-ready courses, learn from experts, and upgrade
-            your skills at your own pace.
+            your skills at your own pace.   
           </p>
 
           {/* Search */}
@@ -32,7 +32,7 @@ function Hero() {
               className="flex-1 border-none bg-transparent focus-visible:ring-0 text-gray-800 dark:text-gray-100 px-4"
             />
             <Button className="rounded-full px-6 py-2 bg-indigo-600 hover:bg-indigo-700 text-white">
-              Search
+              Search 
             </Button>
           </form>
 

@@ -34,7 +34,7 @@ app.use(cookieParser());
 app.use("/api/user", userRouter);
 app.use("/api/course", courseRouter);
 app.use("/api/media", mediaRouter);
-app.use("/api/stripe", purchaseRouter); // only checkout routes
+app.use("/api/stripe", purchaseRouter);
 
 app.get("/", (req, res) => {
   res.send("Server is Live!");

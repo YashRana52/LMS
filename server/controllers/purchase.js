@@ -5,9 +5,6 @@ import User from "../models/user.js";
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
 
-// ========================
-// Create Stripe Checkout
-// ========================
 export const createCheckoutSession = async (req, res) => {
   try {
     const userId = req.id;
@@ -74,21 +71,18 @@ export const createCheckoutSession = async (req, res) => {
   }
 };
 
-// ========================
-// Stripe Webhook
-// ========================
 export const stripeWebhook = async (req, res) => {
+  const sig = req.headers["stripe-signature"];
   let event;
 
   try {
-    const sig = req.headers["stripe-signature"];
     event = stripe.webhooks.constructEvent(
-      req.body, // raw buffer
+      req.body,
       sig,
-      process.env.STRIPE_WEBHOOK_SECRET,
+      process.env.WEBHOOK_ENDPOINT_SECRET,
     );
   } catch (err) {
-    console.error("[Webhook] Signature verification failed:", err.message);
+    console.error("❌ Webhook signature failed:", err.message);
     return res.status(400).send(`Webhook Error: ${err.message}`);
   }
 
@@ -96,8 +90,8 @@ export const stripeWebhook = async (req, res) => {
     switch (event.type) {
       case "checkout.session.completed": {
         const session = event.data.object;
-        const purchaseId = session.metadata?.purchaseId;
 
+        const purchaseId = session.metadata?.purchaseId;
         if (!purchaseId) break;
 
         const purchase = await CoursePurchase.findById(purchaseId);
@@ -107,7 +101,6 @@ export const stripeWebhook = async (req, res) => {
         purchase.amount = session.amount_total / 100;
         await purchase.save();
 
-        // Enroll user
         await User.findByIdAndUpdate(purchase.userId, {
           $addToSet: { enrolledCourses: purchase.courseId },
         });
@@ -116,17 +109,28 @@ export const stripeWebhook = async (req, res) => {
           $addToSet: { enrolledStudents: purchase.userId },
         });
 
-        console.log(`[Webhook] Purchase completed: ${purchaseId}`);
+        console.log("✅ Payment verified & course unlocked");
+        break;
+      }
+
+      case "checkout.session.expired": {
+        const session = event.data.object;
+        const purchaseId = session.metadata?.purchaseId;
+        if (purchaseId) {
+          await CoursePurchase.findByIdAndUpdate(purchaseId, {
+            status: "failed",
+          });
+        }
         break;
       }
 
       default:
-        console.log("[Webhook] Unhandled event type:", event.type);
+        console.log("Unhandled event:", event.type);
     }
 
-    res.status(200).json({ received: true });
+    res.json({ received: true });
   } catch (err) {
-    console.error("[Webhook] Processing error:", err);
-    res.status(500).json({ message: "Internal Server Error" });
+    console.error("Webhook processing error:", err);
+    res.json({ received: true });
   }
 };
