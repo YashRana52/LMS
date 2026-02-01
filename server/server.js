@@ -26,9 +26,11 @@ app.use(express.json());
 app.use(
   cors({
     origin: ["https://lms-wheat-eight.vercel.app", "http://localhost:5173"],
-    credentials: true,
+    credentials: true, // 🔹 must keep
     methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     allowedHeaders: ["Content-Type", "Authorization"],
+    preflightContinue: false, // 🔹 optional but safer
+    optionsSuccessStatus: 200, // 🔹 helps some browsers
   }),
 );
 
