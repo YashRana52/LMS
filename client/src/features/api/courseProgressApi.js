@@ -6,7 +6,14 @@ export const courseProgressApi = createApi({
   reducerPath: "courseProgressApi",
   baseQuery: fetchBaseQuery({
     baseUrl: COURSE_PROGRESS_API,
-    credentials: "include",
+    // ✅ Remove credentials
+    prepareHeaders: (headers) => {
+      const token = localStorage.getItem("token");
+      if (token) {
+        headers.set("Authorization", `Bearer ${token}`);
+      }
+      return headers;
+    },
   }),
   endpoints: (builder) => ({
     getCourseProgress: builder.query({
@@ -21,7 +28,6 @@ export const courseProgressApi = createApi({
         method: "POST",
       }),
     }),
-
     completeCourse: builder.mutation({
       query: (courseId) => ({
         url: `/${courseId}/complete`,

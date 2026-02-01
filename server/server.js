@@ -2,8 +2,8 @@ import express from "express";
 import connectDB from "./configs/db.js";
 import "dotenv/config";
 import cors from "cors";
-import cookieParser from "cookie-parser";
 
+// Import routes
 import userRouter from "./routes/user.js";
 import courseRouter from "./routes/course.js";
 import mediaRouter from "./routes/media.js";
@@ -12,7 +12,7 @@ import courseProgress from "./routes/coursePorgress.js";
 
 const app = express();
 await connectDB();
-const port = 3000;
+const port = process.env.PORT || 3000;
 
 // ⚡ Stripe webhook route — must be BEFORE express.json()
 app.post(
@@ -23,30 +23,36 @@ app.post(
 
 // ⚡ Global middlewares
 app.use(express.json());
+
+// ⚡ CORS setup for frontend (production + local)
 app.use(
   cors({
     origin: ["https://lms-wheat-eight.vercel.app", "http://localhost:5173"],
-    credentials: true, // 🔹 must keep
+    //  credentials false because we are not using cookies
+    credentials: false,
     methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     allowedHeaders: ["Content-Type", "Authorization"],
-    preflightContinue: false, // 🔹 optional but safer
-    optionsSuccessStatus: 200, // 🔹 helps some browsers
+    preflightContinue: false,
+    optionsSuccessStatus: 200,
   }),
 );
 
-app.use(cookieParser());
+// ⚡ Cookie parser not needed anymore
+// app.use(cookieParser());
 
-// Routes
+// ⚡ Routes
 app.use("/api/user", userRouter);
 app.use("/api/progress", courseProgress);
 app.use("/api/course", courseRouter);
 app.use("/api/media", mediaRouter);
 app.use("/api/stripe", purchaseRouter);
 
+// ⚡ Default route
 app.get("/", (req, res) => {
   res.send("Server is Live!");
 });
 
+// ⚡ Start server
 app.listen(port, () => {
   console.log(`Server is running at http://localhost:${port}`);
 });

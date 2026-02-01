@@ -6,13 +6,6 @@ import {
   uploadMedia,
 } from "../utills/cloudinary.js";
 
-const cookieOptions = {
-  httpOnly: false, // 🔹 JS se access possible
-  secure: false, // 🔹 HTTPS nahi bhi chalega
-  sameSite: "lax", // 🔹 browser cross-site tolerant
-  maxAge: 7 * 24 * 60 * 60 * 1000,
-};
-
 //Generate jwt Token
 const generateToken = (userId) => {
   return jwt.sign({ id: userId }, process.env.JWT_SECRET, { expiresIn: "7d" });
@@ -48,8 +41,6 @@ export const registerUser = async (req, res) => {
 
     const token = generateToken(user._id.toString());
 
-    res.cookie("token", token, cookieOptions);
-
     return res.status(201).json({
       success: true,
       message: `Welcome ${user.name}`,
@@ -58,6 +49,7 @@ export const registerUser = async (req, res) => {
         name: user.name,
         email: user.email,
       },
+      token, // 🔥 token directly in JSON
     });
   } catch (error) {
     console.log(error);
@@ -98,12 +90,15 @@ export const loginUser = async (req, res) => {
 
     const token = generateToken(user._id.toString());
 
-    res.cookie("token", token, cookieOptions);
-
     return res.status(200).json({
       success: true,
       message: `Welcome back ${user.name}`,
-      user,
+      user: {
+        id: user._id,
+        name: user.name,
+        email: user.email,
+      },
+      token, // 🔥 token directly in JSON
     });
   } catch (error) {
     console.log(error);
@@ -114,9 +109,10 @@ export const loginUser = async (req, res) => {
   }
 };
 
+//Logout (bas frontend token remove karega)
 export const logout = async (_, res) => {
   try {
-    return res.status(200).cookie("token", "", { maxAge: 0 }).json({
+    return res.status(200).json({
       success: true,
       message: "Logged out successfully",
     });

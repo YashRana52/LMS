@@ -7,7 +7,14 @@ export const courseApi = createApi({
   tagTypes: ["Refetch-Creator-Courses", "Refetch-Lecture"],
   baseQuery: fetchBaseQuery({
     baseUrl: COURSE_API,
-    credentials: "include",
+    // ✅ Remove credentials, use header instead
+    prepareHeaders: (headers) => {
+      const token = localStorage.getItem("token");
+      if (token) {
+        headers.set("Authorization", `Bearer ${token}`);
+      }
+      return headers;
+    },
   }),
   endpoints: (builder) => ({
     createCourse: builder.mutation({

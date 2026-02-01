@@ -7,7 +7,14 @@ export const authApi = createApi({
   reducerPath: "authApi",
   baseQuery: fetchBaseQuery({
     baseUrl: USER_API,
-    credentials: "include",
+    // ✅ remove credentials: include
+    prepareHeaders: (headers) => {
+      const token = localStorage.getItem("token");
+      if (token) {
+        headers.set("Authorization", `Bearer ${token}`);
+      }
+      return headers;
+    },
   }),
   endpoints: (builder) => ({
     registerUser: builder.mutation({
@@ -16,6 +23,16 @@ export const authApi = createApi({
         method: "POST",
         body: inputData,
       }),
+      async onQueryStarted(_, { queryFulfilled, dispatch }) {
+        try {
+          const result = await queryFulfilled;
+          // 🔹 Store token in localStorage
+          localStorage.setItem("token", result.data.token);
+          dispatch(userLoggedIn({ user: result.data.user }));
+        } catch (error) {
+          console.log(error);
+        }
+      },
     }),
     loginUser: builder.mutation({
       query: (inputData) => ({
@@ -26,6 +43,7 @@ export const authApi = createApi({
       async onQueryStarted(_, { queryFulfilled, dispatch }) {
         try {
           const result = await queryFulfilled;
+          localStorage.setItem("token", result.data.token); // 🔹 store token
           dispatch(userLoggedIn({ user: result.data.user }));
         } catch (error) {
           console.log(error);
@@ -46,7 +64,6 @@ export const authApi = createApi({
         }
       },
     }),
-
     updateUser: builder.mutation({
       query: (formData) => ({
         url: "profile/update",
@@ -59,9 +76,9 @@ export const authApi = createApi({
         url: "logout",
         method: "GET",
       }),
-
       async onQueryStarted(_, { dispatch }) {
         try {
+          localStorage.removeItem("token"); // 🔹 remove token
           dispatch(userLoggedOut());
         } catch (error) {
           console.log(error);
