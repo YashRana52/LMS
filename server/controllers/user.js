@@ -7,9 +7,9 @@ import {
 } from "../utills/cloudinary.js";
 
 const cookieOptions = {
-  httpOnly: true,
-  secure: true,
-  sameSite: "none",
+  httpOnly: false, // 🔹 JS se access possible
+  secure: false, // 🔹 HTTPS nahi bhi chalega
+  sameSite: "lax", // 🔹 browser cross-site tolerant
   maxAge: 7 * 24 * 60 * 60 * 1000,
 };
 
