@@ -25,10 +25,11 @@ app.post(
 app.use(express.json());
 app.use(
   cors({
-    origin: "https://lms-6lky.vercel.app",
+    origin: "https://lms-wheat-eight.vercel.app",
     credentials: true,
   }),
 );
+
 app.use(cookieParser());
 
 // Routes
