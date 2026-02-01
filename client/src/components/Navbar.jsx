@@ -83,11 +83,12 @@ function Navbar() {
                   </DropdownMenuItem>
                 </Link>
 
-                {role === "instructor" && (
+                {user.role === "instructor" && (
                   <>
                     <DropdownMenuSeparator />
                     <DropdownMenuItem className="gap-2">
-                      <LayoutDashboard size={16} /> Dashboard
+                      <LayoutDashboard size={16} />
+                      <Link to={"/admin/dashboard"}>Dashboard</Link>
                     </DropdownMenuItem>
                   </>
                 )}
@@ -125,7 +126,7 @@ function Navbar() {
 
 export default Navbar;
 
-const MobileNavbar = ({ user, role }) => {
+const MobileNavbar = ({ user }) => {
   return (
     <Sheet>
       <SheetTrigger asChild>
@@ -152,7 +153,7 @@ const MobileNavbar = ({ user, role }) => {
                 <User size={16} /> Edit Profile
               </button>
 
-              {role === "instructor" && (
+              {user.role === "instructor" && (
                 <button className="flex items-center gap-2 hover:text-primary">
                   <LayoutDashboard size={16} /> Dashboard
                 </button>

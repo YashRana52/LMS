@@ -8,6 +8,7 @@ import userRouter from "./routes/user.js";
 import courseRouter from "./routes/course.js";
 import mediaRouter from "./routes/media.js";
 import purchaseRouter, { stripeWebhook } from "./routes/purchase.js";
+import courseProgress from "./routes/coursePorgress.js";
 
 const app = express();
 await connectDB();
@@ -32,6 +33,7 @@ app.use(cookieParser());
 
 // Routes
 app.use("/api/user", userRouter);
+app.use("/api/progress", courseProgress);
 app.use("/api/course", courseRouter);
 app.use("/api/media", mediaRouter);
 app.use("/api/stripe", purchaseRouter);

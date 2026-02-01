@@ -12,7 +12,9 @@ export const uploadMedia = (buffer, folder = "lms") => {
       .upload_stream(
         {
           folder,
-          resource_type: "auto",
+          resource_type: "video", // 🔥 MUST
+          chunk_size: 6 * 1024 * 1024, // 🔥 enables byte-range streaming
+          eager_async: true,
         },
         (error, result) => {
           if (error) return reject(error);

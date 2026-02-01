@@ -1,24 +1,28 @@
 import React from "react";
 import Course from "./Course";
+import { useLoadUserQuery } from "@/features/api/authApi";
 
 function MyLearning() {
-  const isLoading = false;
-  const myLeaningCourses = [];
+  const { data, isLoading } = useLoadUserQuery();
+
+  const MyLearning = data?.user.enrolledCourses || [];
   return (
     <div className="max-w-4xl mx-auto my-20 px-4 md:px-0">
-      <h1 className="text-3xl sm:text-4xl font-extrabold tracking-tight text-gray-900">
+      <h1 className="text-3xl sm:text-4xl font-extrabold tracking-tight text-gray-900 dark:text-gray-100">
         My Learning
       </h1>
 
       <div className="my-5">
         {isLoading ? (
           <MyLearningSkeleton />
-        ) : myLeaningCourses.length === 0 ? (
-          <p>You are not enrolled in any course</p>
+        ) : MyLearning.length === 0 ? (
+          <p className="text-gray-600 dark:text-gray-400">
+            You are not enrolled in any course
+          </p>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
-            {[1, 2].map((course, index) => (
-              <Course key={index} course={course} />
+            {MyLearning.map((course) => (
+              <Course key={course._id} course={course} />
             ))}
           </div>
         )}

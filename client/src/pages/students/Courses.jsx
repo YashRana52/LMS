@@ -12,13 +12,14 @@ function Courses() {
   }
 
   return (
-    <div className="bg-linear-to-b from-gray-50 to-white">
+    <div className="bg-linear-to-b from-gray-50 to-white dark:from-gray-950 dark:to-gray-900">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-14">
         <div className="text-center mb-10">
-          <h2 className="text-3xl sm:text-4xl font-extrabold tracking-tight text-gray-900">
+          <h2 className="text-3xl sm:text-4xl font-extrabold tracking-tight text-gray-900 dark:text-gray-100">
             Our Courses
           </h2>
-          <p className="mt-2 text-gray-600 max-w-xl mx-auto">
+
+          <p className="mt-2 text-gray-600 dark:text-gray-400 max-w-xl mx-auto">
             Learn from industry-ready courses crafted by professionals
           </p>
         </div>

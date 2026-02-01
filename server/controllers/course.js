@@ -228,6 +228,7 @@ export const editLecture = async (req, res) => {
     const { lectureTitle, videoInfo, isPreviewFree } = req.body;
     const { courseId, lectureId } = req.params;
     const lecture = await Lecture.findById(lectureId);
+
     if (!lecture) {
       return res.status(404).json({
         success: false,
@@ -243,7 +244,7 @@ export const editLecture = async (req, res) => {
       lecture.videoUrl = videoInfo.videoUrl;
     }
     if (videoInfo?.publicId) {
-      lecture.videoPublicId = videoInfo.publicId;
+      lecture.publicId = videoInfo.publicId;
     }
 
     lecture.isPreviewFree = isPreviewFree;
@@ -390,5 +391,56 @@ export const getPublishCourse = async (_, res) => {
       success: false,
       message: "Failed to find published course",
     });
+  }
+};
+
+export const SearchCourse = async (req, res) => {
+  try {
+    const { query = "", categories = [], sortByPrice = "" } = req.query;
+
+    //create search query
+
+    const searchCriteria = {
+      isPublished: true,
+      $or: [
+        {
+          courseTitle: { $regex: query, $options: "i" },
+        },
+        {
+          subTitle: { $regex: query, $options: "i" },
+        },
+        {
+          category: { $regex: query, $options: "i" },
+        },
+      ],
+    };
+
+    // if ategory selected
+    if (categories.length > 0) {
+      searchCriteria.category = { $in: categories };
+    }
+
+    //define sorting order
+    const sortOptions = {};
+
+    if (sortByPrice === "low") {
+      sortOptions.coursePrice = 1; //sort by price in assending order
+    } else if (sortByPrice === "high") {
+      sortOptions.coursePrice = -1; //sort by price in dessending order
+    }
+
+    let courses = await Course.find(searchCriteria)
+      .populate({
+        path: "creator",
+        select: "name photoUrl",
+      })
+      .sort(sortOptions);
+
+    return res.status(200).json({
+      success: true,
+      courses: courses || [],
+    });
+  } catch (error) {
+    console.log(error);
   }
 };

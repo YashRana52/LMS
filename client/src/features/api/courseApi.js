@@ -63,7 +63,7 @@ export const courseApi = createApi({
         isPreviewFree,
       }) => ({
         url: `/${courseId}/lecture/${lectureId}`,
-        method: "POST",
+        method: "PUT",
         body: { lectureTitle, videoInfo, isPreviewFree },
       }),
     }),
@@ -92,6 +92,27 @@ export const courseApi = createApi({
         method: "GET",
       }),
     }),
+    getSearchedCourse: builder.query({
+      query: ({ searchQuery, categories, sortByPrice }) => {
+        //build query strinf
+        let queryString = `/search?query=${encodeURIComponent(searchQuery)}`;
+        // appned category
+        if (categories && categories.length > 0) {
+          const categoriesString = categories.map(encodeURIComponent);
+          queryString += `&categories=${categoriesString}`;
+        }
+
+        //append sortby price if avaiable
+
+        if (sortByPrice) {
+          queryString += `&sortByPrice=${encodeURIComponent(sortByPrice)}`;
+        }
+        return {
+          url: queryString,
+          method: "GET",
+        };
+      },
+    }),
   }),
 });
 
@@ -107,4 +128,5 @@ export const {
   useGetLectureByIdQuery,
   usePublishCourseMutation,
   useGetPublishedCourseQuery,
+  useGetSearchedCourseQuery,
 } = courseApi;

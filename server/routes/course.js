@@ -11,6 +11,7 @@ import {
   getLectureById,
   getPublishCourse,
   removeLecture,
+  SearchCourse,
   togglePublishCourse,
 } from "../controllers/course.js";
 import upload from "../utills/multer.js";
@@ -18,6 +19,7 @@ import upload from "../utills/multer.js";
 const courseRouter = express.Router();
 
 courseRouter.post("/create", protect, createCourse);
+courseRouter.get("/search", protect, SearchCourse);
 courseRouter.get("/get", protect, getCreatorCourses);
 courseRouter.put(
   "/edit/:courseId",
@@ -30,7 +32,7 @@ courseRouter.get("/:courseId", protect, getCourseById);
 courseRouter.post("/:courseId/lecture", protect, createLecture);
 courseRouter.get("/:courseId/lecture", protect, getCourseLecture);
 
-courseRouter.post("/:courseId/lecture/:lectureId", protect, editLecture);
+courseRouter.put("/:courseId/lecture/:lectureId", protect, editLecture);
 courseRouter.delete("/lecture/:lectureId", protect, removeLecture);
 courseRouter.get("/lecture/:lectureId", protect, getLectureById);
 courseRouter.patch("/:courseId", protect, togglePublishCourse);

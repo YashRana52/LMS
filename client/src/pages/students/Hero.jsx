@@ -1,8 +1,19 @@
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import React from "react";
+import React, { useState } from "react";
+import { useNavigate } from "react-router-dom";
 
 function Hero() {
+  const [searchQuery, setSearchQuery] = useState("");
+  const navigate = useNavigate();
+
+  const searchHandler = async (e) => {
+    e.preventDefault();
+    if (searchQuery.trim() !== "") {
+      navigate(`/course/search?query=${searchQuery}`);
+    }
+    setSearchQuery("");
+  };
   return (
     <section className="relative mt-16 overflow-hidden">
       {/* Background */}
@@ -22,22 +33,31 @@ function Hero() {
 
           <p className="mt-6 text-lg text-gray-200 dark:text-gray-400 max-w-2xl mx-auto">
             Discover industry-ready courses, learn from experts, and upgrade
-            your skills at your own pace.   
+            your skills at your own pace.
           </p>
 
           {/* Search */}
-          <form className="mt-10 flex items-center gap-2 bg-white/90 dark:bg-gray-900/70 backdrop-blur-md rounded-full shadow-xl max-w-2xl mx-auto px-3 py-2">
+          <form
+            onSubmit={searchHandler}
+            className="mt-10 flex items-center gap-2 bg-white/90 dark:bg-gray-900/70 backdrop-blur-md rounded-full shadow-xl max-w-2xl mx-auto px-3 py-2"
+          >
             <Input
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="Search courses, skills, or instructors..."
               className="flex-1 border-none bg-transparent focus-visible:ring-0 text-gray-800 dark:text-gray-100 px-4"
             />
-            <Button className="rounded-full px-6 py-2 bg-indigo-600 hover:bg-indigo-700 text-white">
-              Search 
+            <Button
+              type="submit"
+              className="rounded-full px-6 py-2 bg-indigo-600 hover:bg-indigo-700 text-white"
+            >
+              Search
             </Button>
           </form>
 
           <div className="mt-10 flex justify-center gap-4 flex-wrap">
             <Button
+              onClick={() => navigate(`course/search?query`)}
               className="
       rounded-full px-8 py-3
       bg-white text-indigo-600 font-semibold

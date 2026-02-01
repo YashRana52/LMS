@@ -45,7 +45,14 @@ function LectureTab() {
     if (lecture) {
       setLectureTitle(lecture.lectureTitle || "");
       setIsFree(lecture.isPreviewFree || false);
-      setUploadVideoInfo(lecture.videoInfo || null);
+      setUploadVideoInfo(
+        lecture.videoUrl
+          ? {
+              videoUrl: lecture.videoUrl,
+              publicId: lecture.publicId,
+            }
+          : null,
+      );
     }
   }, [lecture]);
 
@@ -80,7 +87,7 @@ function LectureTab() {
       });
 
       setUploadVideoInfo({
-        videoUrl: res.data.url,
+        videoUrl: res.data.secure_url,
         publicId: res.data.public_id,
       });
 

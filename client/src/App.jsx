@@ -17,6 +17,14 @@ import CreateLecture from "./pages/admin/lecture/CreateLecture";
 import EditLecture from "./pages/admin/lecture/EditLecture";
 import CourseDetail from "./pages/students/CourseDetail";
 import CourseProgress from "./pages/students/CourseProgress";
+import SearchPage from "./pages/students/SearchPage";
+import {
+  AdminRoute,
+  AuthenticateUser,
+  ProtectetRoute,
+} from "./components/ProtectedRoutes";
+import PurchaseCourseProtectedRoute from "./components/PurchaseCourseProtectedRoute";
+import { ThemeProvider } from "./components/ThemeProvider";
 
 const appRouter = createBrowserRouter([
   {
@@ -34,28 +42,63 @@ const appRouter = createBrowserRouter([
       },
       {
         path: "login",
-        element: <Login />,
+        element: (
+          <AuthenticateUser>
+            <Login />
+          </AuthenticateUser>
+        ),
       },
       {
         path: "my-learning",
-        element: <MyLearning />,
+        element: (
+          <ProtectetRoute>
+            <MyLearning />
+          </ProtectetRoute>
+        ),
       },
       {
         path: "profile",
-        element: <Profile />,
+        element: (
+          <ProtectetRoute>
+            <Profile />
+          </ProtectetRoute>
+        ),
+      },
+      {
+        path: "course/search",
+        element: (
+          <ProtectetRoute>
+            <SearchPage />
+          </ProtectetRoute>
+        ),
       },
       {
         path: "course-details/:courseId",
-        element: <CourseDetail />,
+        element: (
+          <ProtectetRoute>
+            <CourseDetail />
+          </ProtectetRoute>
+        ),
       },
       {
         path: "course-progress/:courseId",
-        element: <CourseProgress />,
+        element: (
+          <ProtectetRoute>
+            <PurchaseCourseProtectedRoute>
+              <CourseProgress />
+            </PurchaseCourseProtectedRoute>
+          </ProtectetRoute>
+        ),
       },
+
       // admin routes statred from here
       {
         path: "admin",
-        element: <Sidebar />,
+        element: (
+          <AdminRoute>
+            <Sidebar />
+          </AdminRoute>
+        ),
         children: [
           {
             path: "dashboard",
@@ -90,7 +133,9 @@ const appRouter = createBrowserRouter([
 function App() {
   return (
     <main>
-      <RouterProvider router={appRouter} />
+      <ThemeProvider defaultTheme="system">
+        <RouterProvider router={appRouter} />
+      </ThemeProvider>
     </main>
   );
 }
