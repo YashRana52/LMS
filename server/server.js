@@ -25,17 +25,7 @@ app.post(
 app.use(express.json());
 
 // ⚡ CORS setup for frontend (production + local)
-app.use(
-  cors({
-    origin: ["https://lms-wheat-eight.vercel.app", "http://localhost:5173"],
-    //  credentials false because we are not using cookies
-    credentials: false,
-    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-    allowedHeaders: ["Content-Type", "Authorization"],
-    preflightContinue: false,
-    optionsSuccessStatus: 200,
-  }),
-);
+app.use(cors());
 
 // ⚡ Cookie parser not needed anymore
 // app.use(cookieParser());
